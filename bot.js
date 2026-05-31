@@ -132,19 +132,24 @@ bot.on('text', (ctx) => {
 });
 
 
-// Desplegar menú de votación
+
+// Desplegar menú de votación personalizado
 function iniciarVotacion(chatId) {
     const state = juego.getChatState(chatId);
     state.estado = 'VOTACION';
 
-    const botones = [];
-    state.jugadores.forEach((player, id) => {
-        // Enlazar el voto al chatId específico
-        botones.push([Markup.button.callback(`Votar por ${player.name}`, `votar_${chatId}_${id}`)]);
-    });
+    // Generar y enviar un teclado único para cada jugador
+    state.jugadores.forEach((playerReceptor, idReceptor) => {
+        const botones = [];
+        
+        state.jugadores.forEach((playerOpcion, idOpcion) => {
+            // Condición para NO mostrar el botón de votarse a sí mismo
+            if (idReceptor !== idOpcion) {
+                botones.push([Markup.button.callback(`Votar por ${playerOpcion.name}`, `votar_${chatId}_${idOpcion}`)]);
+            }
+        });
 
-    state.jugadores.forEach((player, id) => {
-        bot.telegram.sendMessage(id, '🚨 ¡Es hora de votar! ¿Quién es el impostor?', Markup.inlineKeyboard(botones)).catch(() => {});
+        bot.telegram.sendMessage(idReceptor, '🚨 ¡Es hora de votar! ¿Quién crees que es el impostor?', Markup.inlineKeyboard(botones)).catch(() => {});
     });
 
     bot.telegram.sendMessage(chatId, '🏁 Fase de charla terminada. Tienen 60 segundos para votar en sus chats privados.');
@@ -153,6 +158,7 @@ function iniciarVotacion(chatId) {
         procesarVotacion(chatId);
     }, 60000);
 }
+
 
 // Manejador de botones de votación
 bot.action(/votar_(-?\d+)_(.+)/, (ctx) => {
