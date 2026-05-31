@@ -93,22 +93,44 @@ function ejecutarTurno(chatId) {
     }
 }
 
-// Escuchador de texto para el jugador en turno
+
+// Escuchador de texto para el jugador en turno con auto-borrado de errores
 bot.on('text', (ctx) => {
+    if (ctx.chat.type === 'private') return;
+
     const state = juego.getChatState(ctx.chat.id);
     
     if (state.estado === 'EN_RONDA' && state.colaJugadores && state.indiceTurno < state.colaJugadores.length) {
         const jugadorEsperado = state.colaJugadores[state.indiceTurno];
         
         if (ctx.from.id === jugadorEsperado.id) {
+            const palabraIntento = ctx.message.text.trim();
+
+            if (palabraIntento.split(/\s+/).length > 1) {
+                ctx.deleteMessage().catch(() => {}); 
+                return ctx.reply(`⚠️ ${ctx.from.first_name}, solo puedes decir **UNA** palabra. Inténtalo de nuevo.`);
+            }
+
+            if (palabraIntento.toLowerCase() === state.palabraSecreta.toLowerCase()) {
+                ctx.deleteMessage().catch(() => {}); 
+                return ctx.reply(`🚫 ¡No puedes decir la palabra secreta! Tu mensaje fue eliminado por seguridad. Di otra cosa.`);
+            }
+
+            const respuestasPrevias = Array.from(state.respuestas.values()).map(p => p.toLowerCase());
+            if (respuestasPrevias.includes(palabraIntento.toLowerCase())) {
+                ctx.deleteMessage().catch(() => {}); 
+                return ctx.reply(`🔄 Alguien ya dijo esa palabra. ¡Piensa en otra!`);
+            }
+
             clearTimeout(state.timeoutId);
-            state.respuestas.set(ctx.from.id, ctx.message.text); // Confirmar participación
+            state.respuestas.set(ctx.from.id, palabraIntento);
             ctx.reply(`✅ ${ctx.from.first_name} ha hablado.`);
             state.indiceTurno++;
             ejecutarTurno(ctx.chat.id);
         }
     }
 });
+
 
 // Desplegar menú de votación
 function iniciarVotacion(chatId) {
