@@ -34,7 +34,7 @@ bot.action('unirse', (ctx) => {
 // Comando para iniciar el juego (requiere al menos 3 jugadores)
 bot.command('iniciar', (ctx) => {
     const state = juego.getChatState(ctx.chat.id);
-    if (state.jugadores.size < 3) return ctx.reply('⚠️ Necesitas al menos 3 jugadores para jugar Spyfall.');
+    if (state.jugadores.size < 2) return ctx.reply('⚠️ Necesitas al menos 3 jugadores para jugar Spyfall.');
     if (state.estado !== 'REGISTRO') return ctx.reply('⚠️ Debes usar /jugar primero para abrir el registro.');
 
     // Inicializamos puntuaciones a 0
