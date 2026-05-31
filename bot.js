@@ -160,14 +160,20 @@ function iniciarVotacion(chatId) {
 }
 
 
+
 // Manejador de botones de votación
 bot.action(/votar_(-?\d+)_(.+)/, (ctx) => {
-    const chatId = parseInt(ctx.match[1]); // ID del grupo donde se originó el juego
+    const chatId = parseInt(ctx.match[1]); // ID del grupo
     const votadoId = parseInt(ctx.match[2]);
     const votanteId = ctx.from.id;
 
     const state = juego.getChatState(chatId);
     if (state.estado !== 'VOTACION') return ctx.answerCbQuery('La votación ya terminó.');
+
+    // Validación extra: Bloquear estrictamente el auto-voto
+    if (votanteId === votadoId) {
+        return ctx.answerCbQuery('⚠️ Estrategia no permitida. No puedes votar por ti mismo.', { show_alert: true });
+    }
 
     state.votos.set(votanteId, votadoId);
     ctx.answerCbQuery('✅ Voto registrado');
@@ -179,6 +185,7 @@ bot.action(/votar_(-?\d+)_(.+)/, (ctx) => {
         procesarVotacion(chatId);
     }
 });
+
 
 // Procesar resultados, sumar puntos y revelar al impostor
 function procesarVotacion(chatId) {
