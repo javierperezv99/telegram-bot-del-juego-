@@ -34,6 +34,35 @@ bot.command('iniciar', (ctx) => {
     
     setTimeout(() => ctx.reply('¡Tiempo terminado! Hora de votar.'), 60000);
 });
+// Función para generar botones de votación
+function iniciarVotacion(ctx) {
+    const botones = [];
+    juego.jugadores.forEach((data, id) => {
+        // Creamos un botón por cada jugador (excepto el que vota, que se añadiría luego)
+        botones.push([Markup.button.callback(`Votar por ${data.nombre}`, `voto_${id}`)]);
+    });
+
+    juego.jugadores.forEach((data, id) => {
+        bot.telegram.sendMessage(id, '¿Quién crees que es el impostor?', Markup.inlineKeyboard(botones));
+    });
+}
+
+// Y dentro del setTimeout, llama a la función:
+setTimeout(() => {
+    juego.estado = 'VOTACION';
+    ctx.reply('¡Tiempo terminado! Hora de votar. Revisa tu chat privado.');
+    iniciarVotacion(ctx);
+}, 60000);
+
+// Manejador del voto (cuando alguien pulsa el botón)
+bot.action(/voto_(.+)/, (ctx) => {
+    const votadoId = ctx.match[1];
+    const votanteId = ctx.from.id;
+    juego.votos.set(votanteId, votadoId);
+    ctx.answerCbQuery('¡Voto registrado!');
+    ctx.editMessageText('✅ Voto registrado. Esperando a los demás...');
+});
+
 
 bot.on('text', (ctx) => {
     if (juego.estado === 'JUEGO' && juego.jugadores.has(ctx.from.id)) {
