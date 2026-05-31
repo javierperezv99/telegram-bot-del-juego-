@@ -79,8 +79,40 @@ bot.on('text', (ctx) => {
 function iniciarVotacion(ctx) {
     juego.estado = 'VOTACION';
     ctx.reply('🏁 Ronda terminada. Voten en privado quién es el impostor.');
-    // Aquí puedes añadir la lógica de botones que definimos anteriormente
+    // Aquí puedes añadir la lógica de botones que definimos function iniciarVotacion(ctx) {
+    juego.estado = 'VOTACION';
     
+    // Creamos botones con los nombres de todos los jugadores
+    const botones = [];
+    juego.jugadores.forEach((data, id) => {
+        botones.push([Markup.button.callback(`Votar por ${data.nombre}`, `voto_${id}`)]);
+    });
+
+    // Enviamos el teclado privado a cada jugador
+    juego.jugadores.forEach((_, id) => {
+        bot.telegram.sendMessage(id, '🚨 ¡Es hora de votar! ¿Quién es el impostor?', Markup.inlineKeyboard(botones))
+            .catch(() => {}); // Por si el bot no ha sido iniciado por el jugador
+    });
+
+    ctx.reply('🏁 Ronda terminada. He enviado el menú de votación a sus chats privados.');
+}
+bot.action(/voto_(.+)/, (ctx) => {
+    const votadoId = ctx.match[1]; // ID del jugador votado
+    const votanteId = ctx.from.id; // ID del que vota
+    
+    // Guardamos el voto (puedes usar un Map para esto: votos.set(votanteId, votadoId))
+    votos.set(votanteId, votadoId);
+    
+    ctx.answerCbQuery('✅ Voto registrado');
+    ctx.editMessageText('✅ Voto registrado. Esperando a los demás...');
+    
+    // Opcional: Verificar si todos ya votaron para avanzar a la siguiente ronda
+    if (votos.size === juego.jugadores.size) {
+        ctx.reply('Todos han votado. Calculando resultados...');
+        // Aquí llamarías a la lógica de terminarRonda que definimos
+    }
+});
+
     setTimeout(() => {
         rondaActual++;
         if (rondaActual <= 5) {
@@ -88,7 +120,7 @@ function iniciarVotacion(ctx) {
         } else {
             anunciarGanador(ctx);
         }
-    }, 10000); // 10 segundos para votar antes de pasar a la siguiente ronda
+    }, 50000); // 10 segundos para votar antes de pasar a la siguiente ronda
 }
 
 function anunciarGanador(ctx) {
