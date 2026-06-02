@@ -58,9 +58,11 @@ function iniciarSiguienteRonda(ctxMock) {
     const ids = Array.from(state.jugadores.keys());
     state.impostorId = ids[Math.floor(Math.random() * ids.length)];
 
-    // Crear la cola de turnos
-    state.colaJugadores = Array.from(state.jugadores.values());
+    
+      // Crear la cola de turnos y mezclarla de forma aleatoria
+    state.colaJugadores = Array.from(state.jugadores.values()).sort(() => Math.random() - 0.5);
     state.indiceTurno = 0;
+;
 
     // Enviar mensajes privados
     state.jugadores.forEach((player, id) => {
