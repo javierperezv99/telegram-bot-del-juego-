@@ -135,7 +135,7 @@ bot.on('text', (ctx) => {
 
 
 
-// Desplegar menú de votación personalizado
+// Desplegar menú de votación personalizado con límite de 3 minutos
 function iniciarVotacion(chatId) {
     const state = juego.getChatState(chatId);
     state.estado = 'VOTACION';
@@ -154,14 +154,14 @@ function iniciarVotacion(chatId) {
         bot.telegram.sendMessage(idReceptor, '🚨 ¡Es hora de votar! ¿Quién crees que es el impostor?', Markup.inlineKeyboard(botones)).catch(() => {});
     });
 
-    bot.telegram.sendMessage(chatId, '🏁 Fase de charla terminada. Tienen 60 segundos para votar en sus chats privados.');
+    // Mensaje en el grupo público con el tiempo correcto
+    bot.telegram.sendMessage(chatId, '🗳️ ¡Las votaciones están abiertas! Tienen un máximo de 3 minutos para emitir su voto en privado con el bot.');
 
+    // Temporizador de 3 minutos (180000 ms) para cerrar la votación automáticamente si alguien se retrasa
     state.timeoutId = setTimeout(() => {
         procesarVotacion(chatId);
-    }, 60000);
+    }, 180000); 
 }
-
-
 
 // Manejador de botones de votación
 bot.action(/votar_(-?\d+)_(.+)/, (ctx) => {
